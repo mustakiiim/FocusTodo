@@ -19,34 +19,37 @@ app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(cors({
     origin: process.env.NODE_ENV === 'production'
-        ? process.env.FRONTEND_URL
+        ? process.env.CLIENT_URL || process.env.FRONTEND_URL
         : 'http://localhost:5173',
     credentials: true
 }));
 
-// Routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/todos', todoRoutes);
 
-// Serving static files in production
+// Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../dist')));
 
-    app.get('*', (req, res) => {
+    // ✅ Express v5–safe catch-all
+    app.use((req, res) => {
         res.sendFile(path.join(__dirname, '../dist', 'index.html'));
     });
 } else {
     app.use((req, res) => {
         res.status(404).json({ message: "Route not found" });
     });
-
 }
 
-// Connect to DB and start server
-connectDB().then(() => {
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+// Start server
+connectDB()
+    .then(() => {
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    })
+    .catch(err => {
+        console.error("Failed to connect to DB", err);
+        process.exit(1);
     });
-}).catch(err => {
-    console.error("Failed to connect to DB", err);
-});
