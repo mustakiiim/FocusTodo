@@ -36,9 +36,10 @@ if (process.env.NODE_ENV === 'production') {
         res.sendFile(path.join(__dirname, '../dist', 'index.html'));
     });
 } else {
-    app.get('/', (req, res) => {
-        res.send('API is running...');
+    app.use((req, res) => {
+        res.status(404).json({ message: "Route not found" });
     });
+
 }
 
 // Connect to DB and start server
